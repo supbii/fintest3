@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jjik'fire</title>
+    <style type="text/css">
+        @font-face {
+            font-family: 'DOSGothic';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/DOSGothic.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body{
+            margin: 0;
+            overflow: hidden;
+            cursor: url('cursor.png')5 5, auto;
+        }
+        #pangcontainer{
+            display: none;
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            z-index: 10000;
+        }
+        #pang{
+            width: 100%;
+            height: 100%;
+        }
+        .backimage{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('background.gif');
+            background-size: cover;
+            background-repeat: no-repeat;
+            z-index: -1;
+        }
+        .front{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('front.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999; 
+            pointer-events: none;
+        }
+        .fireeffect::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 30px;
+            background-image: url('fireeffect_big.gif');
+            background-size: cover;
+            background-repeat: no-repeat;
+            mix-blend-mode: overlay;
+            filter: blur(30px);
+            opacity: 0.5;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        .fireeffect::after {
+            content: "";
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            right: 0;
+            bottom: 0%;
+            padding: 90px;
+            margin-left: auto;
+            margin-right: auto;
+            background-image: url('fireeffect_small.gif');
+            background-size: cover;
+            background-repeat: no-repeat;
+            mix-blend-mode: color-burn;
+            filter: blur(15px);
+            opacity: 0.15;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        .vigne{
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('vignetting.gif');
+            background-size: cover;
+            background-repeat: no-repeat;
+            mix-blend-mode: multiply;
+            filter: blur(3px);
+            opacity: 0.2;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .popup-back{
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+        }
+        .popup{
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            max-width: 750px;
+            height: 100%;
+            max-height: 575px;
+        }
+        /* 화면 크기가 800px보다 작아질 경우 팝업창 크기 조정 */
+        @media (max-width: 800px) {
+            .popup {
+                width: 80%;
+                height: auto;
+            }
+        }
+        .popup-content{
+            font-family: 'DOSGothic';
+            background-image: url('popup.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            position: absolute;
+            margin: 0px;
+            padding: 100px;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 78%;
+            text-align: center;
+            overflow: hidden;
+            transition: transform 0.5s ease; /* 페이지 전환 효과 */
+        }
+        .popup-content h1{
+            font-family: 'DOSGothic';
+            font-size: 1.3rem;
+            line-height: 160%;
+        }
+        .popup-content p{
+            font-family: 'DOSGothic';
+            font-size: 1.1rem;
+            line-height: 160%;
+        }
+        .tip{
+            font-family: 'DOSGothic';
+            font-size: 1.1rem;
+            line-height: 200%;
+        }
+        .page {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        /* 다음 페이지로 넘어갈 때의 효과 */
+        .popup-content.next-page {
+            transform: translateX(-100%);
+        }
+        /* 이전 페이지로 돌아갈 때의 효과 */
+        .popup-content.prev-page {
+            transform: translateX(100%);
+        }
+        .nav-button {
+            margin: 5px;
+            font-size: 1.3rem;
+            border: 0px solid #000;
+            border-radius: 2px;
+            color: #000;
+            background-color: rgb(233, 233, 208);
+            cursor: url('cursor.gif')5 5, auto;
+            user-select: none; /* 텍스트 선택 방지 */
+        }
+        .nav-button:hover {
+            background-color: #fff;
+        }
+        .fire{
+            position: relative;
+            display: flex;
+            width: 20%;
+            margin-left: auto;
+            margin-right: auto;
+            z-index: 3;
+        }
+        .fire img{
+            width: 100%;
+            height: auto;
+            position: absolute;
+            top: 55vh;
+        }
+        .sign{
+            position: relative;
+            display: flex;
+            width: 10%;
+            height: auto;
+            z-index: 10;
+        }
+        .sign img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: 77vh;
+            left: 12vw;
+            cursor: url('cursor.gif')5 5, auto;
+        }
+        /* 상단 버튼 */
+        #saveButton {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            margin: 10px;
+            font-family: 'DOSGothic';
+            font-size: 2rem;
+            color: white;
+            background-color: #D77720;
+            border: none;
+            border-radius: 5px;
+            cursor: url('cursor.gif')5 5, auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        #saveButton:hover {
+            background-color: #984D1A;
+        }
+        #savedCombinations {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            cursor: url('cursor.gif')5 5, auto;
+            z-index: 5000;
+        }
+        .savedCombination {
+            margin: 10px;
+            padding: 10px 20px;
+            font-family: 'DOSGothic';
+            font-size: 1.3rem;
+            background-color: rgb(233, 233, 208);
+            border: 1px solid burlywood;
+            border-radius: 30px;
+            text-align: center;
+            height: 30px;
+            width: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .savedCombination:hover {
+            background-color:burlywood;
+        }
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .savedCombination.newComb {
+            animation: popIn 0.5s ease-out;
+        }
+        .save-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 30%;
+            max-width: 800px;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: rgb(233, 233, 208);
+            border: rgb(233, 233, 208) 1px solid;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 5000;
+            font-family: 'DOSGothic';
+            font-size: 1.8rem;
+            white-space: nowrap;
+        }
+
+        /* 동물 배치 시작 */
+        .container {
+            position: absolute;
+            width: 100%;
+            height: 40vh;
+            bottom: 0;
+        }
+        .vc{  /*첼로 다람쥐*/
+            position: absolute;
+            display: flex;
+            width: 13%;
+            height: auto;
+            z-index: 2;
+        }
+        .vc img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(-3vw - 6.5vw);
+            left: calc(83vw - 6.5%);
+        }
+        .fl{   /*플룻 뱀*/
+            position: absolute;
+            display: flex;
+            width: 11%;
+            height: auto;
+            z-index: 10;
+        }
+        .fl img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(16vw - 5.5vw);
+            left: calc(57vw - 5.5%);
+        }
+        .uku{   /*우쿨렐레 개구리*/
+            position: absolute;
+            display: flex;
+            width: 9%;
+            height: auto;
+            transform: scaleX(-1);
+            z-index: 4;
+        }
+        .uku img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(6vw - 4.5vw);
+            right: calc(66vw - 4.5%);
+        }
+        .dr{
+            position: absolute;
+            display: flex;
+            width: 17%;
+            height: auto;
+            z-index: 9;
+        }
+        .dr img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(10vw - 8.5vw);
+            left: calc(77vw - 8.5%);
+        }
+        .vn{
+            position: absolute;
+            display: flex;
+            width: 15%;
+            height: auto;
+            z-index: 2;
+        }
+        .vn img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(-3vw - 7.5vw);
+            left: calc(69vw - 7.5%);
+        }
+        .pf{
+            position: absolute;
+            display: flex;
+            width: 15%;
+            height: auto;
+            z-index: 2;
+        }
+        .pf img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(-7vw - 7.5vw);
+            left: calc(53vw - 7.5%);
+        }
+        /* 여기까지 오른쪽 */
+        .trb{
+            position: absolute;
+            display: flex;
+            width: 15%;
+            height: auto;
+            transform: scaleX(-1);
+            z-index: 10;
+        }
+        .trb img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(18vw - 7.5vw);
+            right: calc(38vw - 7.5%);
+        }
+        .gtr{
+            position: absolute;
+            display: flex;
+            width: 14%;
+            height: auto;
+            z-index: 6;
+        }
+        .gtr img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(16.5vw - 7vw);
+            left: calc(25vw - 7%);
+        }
+        .djb{
+            position: absolute;
+            display: flex;
+            width: 8%;
+            height: auto;
+            z-index: 4;
+            transform: scaleX(-1);
+        }
+        .djb img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(4vw - 4vw);
+            right: calc(25vw - 4%);
+        }
+        .cb{
+            position: absolute;
+            display: flex;
+            width: 16%;
+            height: auto;
+            z-index: 2;
+        }
+        .cb img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(-11vw - 8vw);
+            left: calc(34vw - 8%);
+        }
+        .trp{
+            position: absolute;
+            display: flex;
+            width: 15%;
+            height: auto;
+            z-index: 5;
+            transform: scaleX(-1);
+        }
+        .trp img{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(4vw - 7.5vw);
+            right: calc(13vw - 7.5%);
+        }
+        .vo{
+            position: absolute;
+            display: flex;
+            width: 36%;
+            height: auto;
+            z-index: 1;
+        }
+        .vostandby{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(0vw - 18vw);
+            left: calc(-17vw - 18%);
+        }
+        .voplay1,
+        .voplay2{
+            width: 100%;
+            height: auto;
+            position: relative;
+            top: calc(0vw - 18vw);
+            left: 0;
+        }
+        /* 여기까지 왼쪽
+        아래부터 그림자 */
+        .shadow{
+            mix-blend-mode: multiply;
+            opacity: 1;
+            pointer-events: none;
+        }
+        .vcshadow{
+            width: 15%;
+            height: auto;
+            position: absolute;
+            top: 3vw;
+            left: 81vw;
+            z-index: 1;
+        }
+        .flshadow{
+            width: 13%;
+            height: auto;
+            position: absolute;
+            top: 20vw;
+            left: 55.5vw;
+            z-index: 1;
+        }
+        .ukushadow{
+            width: 10%;
+            height: auto;
+            position: absolute;
+            top: 9vw;
+            left: 67vw;
+            z-index: 1;
+        }
+        .djbshadow{
+            width: 10%;
+            height: auto;
+            position: absolute;
+            top: 8.5vw;
+            left: 22vw;
+            z-index: 1;
+        }
+        .drshadow{
+            width: 20%;
+            height: auto;
+            position: absolute;
+            top: 16.5vw;
+            left: 74vw;
+            z-index: 1;
+        }
+        .vnshadow{
+            width: 11%;
+            height: auto;
+            position: absolute;
+            top: 1vw;
+            left: 70vw;
+            z-index: 1;
+        }
+        .trbshadow{
+            width: 12%;
+            height: auto;
+            position: absolute;
+            top: 20.5vw;
+            left: 35vw;
+            z-index: 1;
+        }
+        .gtrshadow{
+            width: 12%;
+            height: auto;
+            position: absolute;
+            top: 19.5vw;
+            left: 23vw;
+            z-index: 1;
+        }
+        .pfshadow{
+            width: 17%;
+            height: auto;
+            position: absolute;
+            top: 0vw;
+            left: 52vw;
+            z-index: 1;
+        }
+        .cbshadow{
+            width: 20%;
+            height: auto;
+            position: absolute;
+            top: -0.5vw;
+            left: 28vw;
+            z-index: 1;
+        }
+        .trpshadow{
+            width: 15%;
+            height: auto;
+            position: absolute;
+            top: 9vw;
+            left: 8vw;
+            z-index: 1;
+        }
+        .fireshadow{
+            width: 13%;
+            height: auto;
+            position: absolute;
+            top: 8.8vw;
+            left: 43vw;
+            z-index: 1;
+        }
+        .voshadow{
+            width: 35%;
+            height: auto;
+            position: absolute;
+            top: -2vw;
+            left: -25vw;
+            z-index: 1;
+            transform: rotate(-6.5deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="backimage"></div>
+    <div class="front"></div>
+    <div class="effect">
+        <div class="covereffect"></div>
+        <div class="fireeffect"></div>
+        <div class="vigne"></div>
+    </div>
+    <div id="popup-back" class="popup-back"></div>
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <div class="page" id="page1">
+                <br>
+                <h1>작은 동물들이 모여 캠프파이어를 하고 있습니다.<br>
+                각각의 동물을 클릭해 원하는 악기를 활성화해서<br>
+                당신만의 연주회를 꾸려보세요!<br>
+                저장 버튼을 통해 당신의 조합을 남겨두거나,<br>
+                남기고 간 다른 조합을 들어볼 수 있어요.</h1>
+                <p><span class="tip">tip1 !</span><br>
+                원하는 동물이 클릭이 되지 않을 때는<br>동물의 다른 부위를 눌러보세요.<br><br>
+                <span class="tip">tip2 !</span><br>
+                숨어있는 동물을 찾아보세요.<br>
+                이 동물은 박자를 신경 써 눌러줘야 한답니다.</p>
+            </div>
+            <div class="page" id="page2" style="display: none;">
+                <br><br><br><br><br><br><br>
+                <h1>[ 찍사팀 ]<br><br>
+                    Animating by 신수빈 신풍경 안서연<br>
+                    Background Artwork by 안서연<br>
+                    Music Composition by 신풍경<br>
+                    Web Coding by 신수빈</h1>
+            </div>
+            <button id="prevButton" class="nav-button">&#10094;</button>
+            <button id="nextButton" class="nav-button">&#10095;</button>
+        </div>
+    </div>
+
+    <div class="fire">
+        <img id="fire" src="fire.gif">
+    </div>
+    <div class="sign">
+        <img id="sign" src="sign.png">
+    </div>
+
+    <button id="saveButton">저장하기</button>
+    <div id="savedCombinations">
+        <div class="savedCombination" id="comb1"></div>
+        <div class="savedCombination" id="comb2"></div>
+        <div class="savedCombination" id="comb3"></div>
+        <div class="savedCombination" id="comb4"></div>
+        <div class="savedCombination" id="comb5"></div>
+    </div>
+    <div id="saveConfirmationPopup" class="save-popup">조합이 저장되었습니다!</div>
+
+    <div class="container">
+        <div class="vc">
+            <img id="vcstandby" src="vcstandby.gif">
+            <img id="vcplay1" src="vcplay1.gif" style="display: none;">
+            <img id="vcplay2" src="vcplay2.gif" style="display: none;">
+        </div>
+        <div class="fl">
+            <img id="flstandby" src="flstandby.gif">
+            <img id="flplay1" src="flplay1.gif" style="display: none;">
+            <img id="flplay2" src="flplay2.gif" style="display: none;">
+        </div>
+        <div class="uku">
+            <img id="ukustandby" src="ukustandby.gif">
+            <img id="ukuplay1" src="ukuplay1.gif" style="display: none;">
+            <img id="ukuplay2" src="ukuplay2.gif" style="display: none;">
+        </div>
+        <div class="djb">
+            <img id="djbstandby" src="djbstandby.gif">
+            <img id="djbplay1" src="djbplay1.gif" style="display: none;">
+            <img id="djbplay2" src="djbplay2.gif" style="display: none;">
+        </div>
+        <div class="dr">
+            <img id="drstandby" src="drstandby.gif">
+            <img id="drplay1" src="drplay1.gif" style="display: none;">
+            <img id="drplay2" src="drplay2.gif" style="display: none;">
+        </div>
+        <div class="vn">
+            <img id="vnstandby" src="vnstandby.gif">
+            <img id="vnplay1" src="vnplay1.gif" style="display: none;">
+            <img id="vnplay2" src="vnplay2.gif" style="display: none;">
+        </div>
+        <!-- 여기까지 오른쪽 -->
+        <div class="trb">
+            <img id="trbstandby" src="trbstandby.gif">
+            <img id="trbplay1" src="trbplay1.gif" style="display: none;">
+            <img id="trbplay2" src="trbplay2.gif" style="display: none;">
+        </div>
+        <div class="gtr">
+            <img id="gtrstandby" src="gtrstandby.gif">
+            <img id="gtrplay1" src="gtrplay1.gif" style="display: none;">
+            <img id="gtrplay2" src="gtrplay2.gif" style="display: none;">
+        </div>
+        <div class="pf">
+            <img id="pfstandby" src="pfstandby.gif">
+            <img id="pfplay1" src="pfplay1.gif" style="display: none;">
+            <img id="pfplay2" src="pfplay2.gif" style="display: none;">
+        </div>
+        <div class="cb">
+            <img id="cbstandby" src="cbstandby.gif">
+            <img id="cbplay1" src="cbplay1.gif" style="display: none;">
+            <img id="cbplay2" src="cbplay2.gif" style="display: none;">
+        </div>
+        <div class="trp">
+            <img id="trpstandby" src="trpstandby.gif">
+            <img id="trpplay1" src="trpplay1.gif" style="display: none;">
+            <img id="trpplay2" src="trpplay2.gif" style="display: none;">
+        </div>
+        <div class="vo">
+            <img id="vostandby" class="vostandby" src="vostandby.gif">
+            <img id="voplay1" class="voplay1" src="voplay1.gif" style="display: none;">
+            <img id="voplay2" class="voplay2" src="voplay2.gif" style="display: none;">
+        </div>
+        <div id="pangcontainer" style="display: none;">
+            <img id="pang" src="pang.gif">
+        </div>
+        <!-- 여기까지 왼쪽 -->
+        <div class="shadow">
+            <img id="vcshadow" class="vcshadow" src="shadow.gif">
+            <img id="flshadow" class="flshadow" src="shadow.gif">
+            <img id="ukushadow" class="ukushadow" src="shadow.gif">
+            <img id="djbshadow" class="djbshadow" src="shadow.gif">
+            <img id="drshadow" class="drshadow" src="shadow.gif">
+            <img id="vnshadow" class="vnshadow" src="shadow.gif">
+            <img id="trbshadow" class="trbshadow" src="shadow.gif">
+            <img id="gtrshadow" class="gtrshadow" src="shadow.gif">
+            <img id="pfshadow" class="pfshadow" src="shadow.gif">
+            <img id="cbshadow" class="cbshadow" src="shadow.gif">
+            <img id="trpshadow" class="trpshadow" src="shadow.gif">
+            <img id="fireshadow" class="fireshadow" src="shadow.gif">
+            <img id="voshadow" class="voshadow" src="shadow.gif" style="display: none;">
+        </div>
+    </div>
+    <audio id="vcMusic" src="vc.mp3" muted loop></audio>
+    <audio id="flMusic" src="fl.mp3" muted loop></audio>
+    <audio id="ukuMusic" src="uku.mp3" muted loop></audio>
+    <audio id="djbMusic" src="djb.mp3" muted loop></audio>
+    <audio id="drMusic" src="dr.mp3" muted loop></audio>
+    <audio id="vnMusic" src="vn.mp3" muted loop></audio>
+    <audio id="trbMusic" src="trb.mp3" muted loop></audio>
+    <audio id="gtrMusic" src="gtr.mp3" muted loop></audio>
+    <audio id="pfMusic" src="pf.mp3" muted loop></audio>
+    <audio id="cbMusic" src="cb.mp3" muted loop></audio>
+    <audio id="trpMusic" src="trp.mp3" muted loop></audio>
+    <audio id="voMusic" src="vo.mp3" loop></audio>
+    <script src="script.js"></script>
+</body>
+</html>
